@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="notification_action_color_filter">#ffffffff</color>
+
+    <color name="colorAccent">#ffd8d8d8</color>
+    <color name="colorPrimary">#ff000000</color>
+    <color name="colorPrimaryDark">#ff000000</color>
+    <color name="colorTile">#ff181818</color>
+    <color name="common_google_signin_btn_text_dark_default">@android:color/white</color>
+    <color name="common_google_signin_btn_text_dark_disabled">#1f000000</color>
+    <color name="common_google_signin_btn_text_dark_focused">@android:color/black</color>
+    <color name="common_google_signin_btn_text_dark_pressed">@android:color/white</color>
+    <color name="common_google_signin_btn_text_light_default">#90000000</color>
+    <color name="common_google_signin_btn_text_light_disabled">#1f000000</color>
+    <color name="common_google_signin_btn_text_light_focused">#90000000</color>
+    <color name="common_google_signin_btn_text_light_pressed">#de000000</color>
+    <color name="dark_gray_color">#ff393939</color>
+    <color name="default_blue_light">#ff33b5e5</color>
+    <color name="drag_handle_color">#ff707070</color>
+    <color name="light_gray_color">#ffc0c0c0</color>
+    <color name="notification_icon_bg_color">#ff9e9e9e</color>
+    <color name="notification_material_background_media_default_color">#ff424242</color>
+    <color name="orange_color">#ffcc7000</color>
+    <color name="progress_bg_color">#ff707070</color>
+    <color name="progress_gray">#ffd8d8d8</color>
+    <color name="progress_gray_dark">#ff383838</color>
+    <color name="windowActionBar">#ff404040</color>
+    <color name="windowBackground">#ff080808</color>
+</resources>
