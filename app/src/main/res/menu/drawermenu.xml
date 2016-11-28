@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+
+
+    <item android:title="Home"
+          android:id="@+id/nav_home"
+          android:icon="@android:drawable/bottom_bar"/>
+
+    <item android:title="Mqtt Dash"
+          android:id="@+id/nav_item_regular"
+          android:icon="@android:drawable/bottom_bar"/>
+
+
+
+    <item android:title="Others">
+        <menu>
+            <item
+                android:title="Setting"
+                android:icon="@android:drawable/ic_secure"/>
+            <item
+                android:title="Bin"
+                android:icon="@android:drawable/arrow_up_float"/>
+        </menu>
+    </item>
+
+    <group android:id="@+id/group_settings_id">
+
+        <item android:title="Help"
+             android:icon="@android:drawable/ic_menu_help"/>
+    </group>
+
+
+</menu>

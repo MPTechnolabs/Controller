@@ -1,14 +1,19 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
     android:orientation="vertical"
+    android:background="@color/colorPrimaryDark"
     >
 
-    <include android:id="@+id/toolbar"
-        layout="@layout/toolbar"/>
-    <GridView
-        android:layout_width="wrap_content"
+    <com.baoyz.swipemenulistview.SwipeMenuListView
+        android:id="@+id/listView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/dp_15"/>
+
+   <!-- <GridView
+        android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:id="@+id/subscription_list_view"
         android:layout_above="@+id/subscribe_button"
@@ -16,8 +21,8 @@
         android:numColumns="auto_fit"
         android:padding="@dimen/dp_10"
         android:layout_below="@+id/toolbar"
-        android:layout_marginTop="@dimen/dp_15"/>
-
+       />
+-->
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

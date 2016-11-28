@@ -11,7 +11,6 @@
     </style>
 
     <style name="AppTheme1" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="android:windowBackground">@color/windowBackground</item>
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
@@ -28,7 +27,7 @@
     <style name="spinnerTextFieldLabel">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">wrap_content</item>
-        <item name="android:textColor">@color/orange_color</item>
+        <item name="android:textColor">@color/colorPrimary</item>
         <item name="android:paddingLeft">30dp</item>
         <item name="android:paddingRight">30dp</item>
         <item name="android:paddingTop">15dp</item>

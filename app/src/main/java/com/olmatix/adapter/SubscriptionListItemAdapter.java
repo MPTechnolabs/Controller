@@ -34,13 +34,7 @@ public class SubscriptionListItemAdapter extends ArrayAdapter<Subscription>{
         View rowView = inflater.inflate(R.layout.subscription_list_item, parent, false);
         TextView topicTextView = (TextView) rowView.findViewById(R.id.message_text);
         ImageView topicDeleteButton = (ImageView) rowView.findViewById(R.id.topic_delete_image);
-        TextView  qosTextView = (TextView) rowView.findViewById(R.id.qos_label);
         topicTextView.setText(topics.get(position).getTopic());
-        String qosString = context.getString(R.string.qos_text+topics.get(position).getQos());
-        qosTextView.setText(qosString);
-        TextView notifyTextView = (TextView) rowView.findViewById(R.id.show_notifications_label);
-        String notifyString = context.getString(R.string.notify_text, (topics.get(position).isEnableNotifications() ? context.getString(R.string.enabled) : context.getString(R.string.disabled)));
-        notifyTextView.setText(notifyString);
 
         topicDeleteButton.setOnClickListener(new View.OnClickListener() {
             @Override

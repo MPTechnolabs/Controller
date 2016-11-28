@@ -3,24 +3,28 @@ package com.olmatix;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
+
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridView;
-import android.widget.ListView;
-import android.widget.Spinner;
-import android.widget.Switch;
 
+import com.baoyz.swipemenulistview.SwipeMenu;
+import com.baoyz.swipemenulistview.SwipeMenuCreator;
+import com.baoyz.swipemenulistview.SwipeMenuItem;
+import com.baoyz.swipemenulistview.SwipeMenuListView;
 import com.olamatix.R;
 import com.olmatix.adapter.SubscriptionListItemAdapter;
 import com.olmatix.internal.Connections;
@@ -32,32 +36,30 @@ import java.util.ArrayList;
 import java.util.Map;
 
 
-public class SubscriptionFragment extends AppCompatActivity {
+public class SubscriptionFragment extends Fragment {
 
-    int temp_qos_value = 0;
-    GridView subscriptionListView;
+
+    SwipeMenuListView subscriptionListView;
 
     ArrayList<Subscription> subscriptions;
+    private final ArrayList<SubscriptionListItemAdapter.OnUnsubscribeListner> unsubscribeListners = new ArrayList<SubscriptionListItemAdapter.OnUnsubscribeListner>();
+
     SubscriptionListItemAdapter adapter;
-    Toolbar toolbar;
     Connection connection;
 
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        
-        setContentView(R.layout.fragment_subscriptions);
-       // Bundle bundle  = getIntent().getExtras();
-       // String connectionHandle = bundle.getString("Olmatix");
-        toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
-        Map<String, Connection> connections = Connections.getInstance(getApplicationContext()).getConnections();
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+
+        View view =  inflater.inflate(R.layout.fragment_subscriptions,null);
+
+
+        Map<String, Connection> connections = Connections.getInstance(getActivity()).getConnections();
         connection = connections.get("Olmatix");
         subscriptions = connection.getSubscriptions();
 
-        Button subscribeButton = (Button) findViewById(R.id.subscribe_button);
+        Button subscribeButton = (Button) view.findViewById(R.id.subscribe_button);
 
         subscribeButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -66,21 +68,15 @@ public class SubscriptionFragment extends AppCompatActivity {
             }
         });
 
-        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
-
-        subscriptionListView = (GridView) findViewById(R.id.subscription_list_view);
-        adapter = new SubscriptionListItemAdapter(getApplicationContext(), subscriptions);
+        subscriptionListView = (SwipeMenuListView)view. findViewById(R.id.listView);
+        adapter = new SubscriptionListItemAdapter(getActivity(), subscriptions);
 
         adapter.addOnUnsubscribeListner(new SubscriptionListItemAdapter.OnUnsubscribeListner() {
             @Override
             public void onUnsubscribe(Subscription subscription) {
                 try {
                     connection.unsubscribe(subscription);
+
                     System.out.println("Unsubscribed from: " + subscription.toString());
                 } catch (MqttException ex) {
                     System.out.println("Failed to unsubscribe from " + subscription.toString() + ". " + ex.getMessage());
@@ -89,59 +85,139 @@ public class SubscriptionFragment extends AppCompatActivity {
         });
         subscriptionListView.setAdapter(adapter);
 
+        setEvent();
 
+        return view;
+    }
+
+    private void setEvent() {
+
+        SwipeMenuCreator creator = new SwipeMenuCreator() {
+
+            @Override
+            public void create(SwipeMenu menu) {
+                // create "open" item
+                SwipeMenuItem openItem = new SwipeMenuItem(getActivity());
+
+                SwipeMenuItem deleteItem = new SwipeMenuItem(
+                        getActivity());
+                // set item background
+                deleteItem.setBackground(new ColorDrawable(Color.rgb(0xF9,
+                        0x3F, 0x25)));
+                // set item width
+                deleteItem.setWidth(dp2px(90));
+                // set a icon
+                deleteItem.setIcon(R.mipmap.ic_delete);
+                // add to menu
+                menu.addMenuItem(deleteItem);
+            }
+        };
+        // set creator
+        subscriptionListView.setMenuCreator(creator);
+
+        // step 2. listener item click event
+        subscriptionListView.setOnMenuItemClickListener(new SwipeMenuListView.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(int position, SwipeMenu menu, int index) {
+                switch (index) {
+                    case 0:
+                        for (SubscriptionListItemAdapter.OnUnsubscribeListner listner : unsubscribeListners) {
+                            listner.onUnsubscribe(subscriptions.get(position));
+                        }
+                        subscriptions.remove(position);
+                        adapter.notifyDataSetChanged();
+
+                        break;
+
+                }
+                return false;
+            }
+        });
+
+        // set SwipeListener
+        subscriptionListView.setOnSwipeListener(new SwipeMenuListView.OnSwipeListener() {
+
+            @Override
+            public void onSwipeStart(int position) {
+                // swipe start
+            }
+
+            @Override
+            public void onSwipeEnd(int position) {
+                // swipe end
+            }
+        });
+
+        // set MenuStateChangeListener
+        subscriptionListView.setOnMenuStateChangeListener(new SwipeMenuListView.OnMenuStateChangeListener() {
+            @Override
+            public void onMenuOpen(int position) {
+            }
+
+            @Override
+            public void onMenuClose(int position) {
+            }
+        });
+
+        // other setting
+//		listView.setCloseInterpolator(new BounceInterpolator());
+
+        // test item long click
+        subscriptionListView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view,
+                                           int position, long id) {
+                return false;
+            }
+        });
+
+    }
+
+    private int dp2px(int dp) {
+        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp,
+                getResources().getDisplayMetrics());
     }
 
     protected void showInputDialog(){
-        LayoutInflater layoutInflater =  (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        View promptView = layoutInflater.inflate(R.layout.subscription_dialog, null);
-        final EditText topicText = (EditText) promptView.findViewById(R.id.subscription_topic_edit_text);
 
-        final Spinner qos = (Spinner) promptView.findViewById(R.id.subscription_qos_spinner);
-        final ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getApplicationContext(), R.array.qos_options, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        qos.setAdapter(adapter);
-        qos.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                temp_qos_value = Integer.parseInt(getResources().getStringArray(R.array.qos_options)[position]);
-            }
+        LayoutInflater layoutInflaterAndroid = LayoutInflater.from(getActivity());
+        View mView = layoutInflaterAndroid.inflate(R.layout.dialog_topic, null);
+        AlertDialog.Builder alertDialogBuilderUserInput = new AlertDialog.Builder(getActivity());
+        alertDialogBuilderUserInput.setView(mView);
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
+        final EditText topicText = (EditText) mView.findViewById(R.id.userInputDialog);
+        alertDialogBuilderUserInput
+                .setCancelable(false)
+                .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialogBox, int id) {
+                        // ToDo get user input here
 
-            }
-        });
+                        String topic = topicText.getText().toString();
 
-        final Switch notifySwitch = (Switch) promptView.findViewById(R.id.show_notifications_switch);
+                        Subscription subscription = new Subscription(topic, 0, connection.handle(), true);
+                        subscriptions.add(subscription);
+                        try {
+                            connection.addNewSubscription(subscription);
 
-        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(SubscriptionFragment.this);
-        alertDialogBuilder.setView(promptView);
-        alertDialogBuilder.setCancelable(true).setPositiveButton(R.string.subscribe_ok, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                String topic = topicText.getText().toString();
+                        } catch (MqttException ex) {
+                            System.out.println("MqttException whilst subscribing: " + ex.getMessage());
+                        }
+                        adapter.notifyDataSetChanged();
+                    }
+                })
 
-                Subscription subscription = new Subscription(topic, temp_qos_value, connection.handle(), notifySwitch.isChecked());
-                subscriptions.add(subscription);
-                try {
-                    connection.addNewSubscription(subscription);
+                .setNegativeButton("Cancel",
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialogBox, int id) {
+                                dialogBox.cancel();
+                            }
+                        });
 
-                } catch (MqttException ex) {
-                    System.out.println("MqttException whilst subscribing: " + ex.getMessage());
-                }
-                adapter.notifyDataSetChanged();
-            }
-
-            ;
-        }).setNegativeButton(R.string.subscribe_cancel, new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int id) {
-                dialog.cancel();
-            }
-        });
-
-        AlertDialog alert =  alertDialogBuilder.create();
-        alert.getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_VISIBLE);
-        alert.show();
-    }
+        AlertDialog alertDialogAndroid = alertDialogBuilderUserInput.create();
+        alertDialogAndroid.show();
+        }
 
 }
+
+

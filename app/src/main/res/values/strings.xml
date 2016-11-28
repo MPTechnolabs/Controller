@@ -75,5 +75,7 @@
     <string name="subscribe_cancel">Cancel</string>
     <string name="Subscribe">Subscribe</string>
     <string name="disabled">Disabled</string>
+    <string name="on">ON</string>
+    <string name="off">OFF</string>
 
 </resources>

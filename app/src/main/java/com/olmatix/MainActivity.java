@@ -2,9 +2,14 @@ package com.olmatix;
 
 import android.content.Intent;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.Fragment;
+import android.support.design.widget.NavigationView;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,14 +26,17 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Map;
 
-import static com.olamatix.R.mipmap.connection;
+public class MainActivity extends AppCompatActivity{
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener{
 
+    DrawerLayout mDrawerLayout;
+    NavigationView mNavigationView;
+    FragmentManager mFragmentManager;
+    FragmentTransaction mFragmentTransaction;
+    Toolbar toolbar;
     private ChangeListener changeListener = new ChangeListener();
     private ArrayList<String> connectionMap;
     private ConnectionModel formModel;
-    FloatingActionButton fab_connect;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,12 +53,54 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         formModel.setPassword("olmatix");
         connectionMap = new ArrayList<String>();
 
-        fab_connect = (FloatingActionButton) findViewById(R.id.fab_connect);
-        fab_connect.setOnClickListener(this);
         persistAndConnect(formModel);
+
+        findId();
+        setEvent();
     }
 
+    private void findId() {
+        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawerLayout);
+        mNavigationView = (NavigationView) findViewById(R.id.shitstuff) ;
+        mFragmentManager = getSupportFragmentManager();
+        mFragmentTransaction = mFragmentManager.beginTransaction();
 
+        mFragmentTransaction.replace(R.id.containerView,new TabFragment()).addToBackStack(null).commit();
+
+        toolbar = (android.support.v7.widget.Toolbar) findViewById(R.id.toolbar);
+        ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this,mDrawerLayout, toolbar,R.string.app_name,
+                R.string.app_name);
+
+        mDrawerLayout.setDrawerListener(mDrawerToggle);
+
+        mDrawerToggle.syncState();
+    }
+
+    private void setEvent() {
+
+        mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(MenuItem menuItem) {
+                mDrawerLayout.closeDrawers();
+
+
+
+                if (menuItem.getItemId() == R.id.nav_home) {
+                    FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
+                    fragmentTransaction.replace(R.id.containerView,new TabFragment()).addToBackStack(null).commit();
+
+                }
+
+                if (menuItem.getItemId() == R.id.nav_item_regular) {
+                    FragmentTransaction xfragmentTransaction = mFragmentManager.beginTransaction();
+                    xfragmentTransaction.replace(R.id.containerView,new TabFragment()).commit();
+                }
+
+                return false;
+            }
+
+        });
+    }
 
     public void persistAndConnect(ConnectionModel model){
         Log.i("MainActivity", "Persisting new connection:" + model.getClientHandle());
@@ -139,18 +189,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    @Override
-    public void onClick(View v) {
-        switch (v.getId())
-        {
-            case R.id.fab_connect:
-                startActivity(new Intent(this,SubscriptionFragment.class));
-
-                break;
-            default:
-                break;
-        }
-    }
 
     private class ChangeListener implements PropertyChangeListener {
 
