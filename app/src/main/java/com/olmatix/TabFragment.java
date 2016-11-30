@@ -16,12 +16,21 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.olamatix.R;
+import com.olmatix.internal.Connections;
+
+import java.util.Map;
 
 public class TabFragment extends Fragment {
 
     public static TabLayout tabLayout;
     public static ViewPager viewPager;
     public static int int_items = 2;
+    Connection connection;
+    boolean connected;
+    public TabFragment() {
+        setHasOptionsMenu(true);
+    }
+
 
     @Nullable
     @Override
@@ -30,19 +39,20 @@ public class TabFragment extends Fragment {
          *Inflate tab_layout and setup Views.
          */
         View x = inflater.inflate(R.layout.tab_layout, null);
+
+        Map<String, Connection> connections = Connections.getInstance(this.getActivity())
+                .getConnections();
+        connection = connections.get(this.getArguments().getString(ActivityConstants.CONNECTION_KEY));
+        connected = this.getArguments().getBoolean(ActivityConstants.CONNECTED, false);
+
+
+        final String name = connection.getId() + "@" + connection.getHostName() + ":" + connection.getPort();
+        setHasOptionsMenu(true);
         tabLayout = (TabLayout) x.findViewById(R.id.tabs);
         viewPager = (ViewPager) x.findViewById(R.id.viewpager);
 
-        /**
-         *Set an Apater for the View Pager
-         */
         viewPager.setAdapter(new MyAdapter(getChildFragmentManager()));
 
-        /**
-         * Now , this is a workaround ,
-         * The setupWithViewPager dose't works without the runnable .
-         * Maybe a Support Library Bug .
-         */
 
         tabLayout.post(new Runnable() {
             @Override
@@ -50,9 +60,9 @@ public class TabFragment extends Fragment {
                 tabLayout.setupWithViewPager(viewPager);
             }
         });
+        ((MainActivity) getActivity()).connect(connection);
 
         return x;
-
     }
 
     class MyAdapter extends FragmentPagerAdapter {
@@ -61,17 +71,20 @@ public class TabFragment extends Fragment {
             super(fm);
         }
 
-        /**
-         * Return fragment with respect to Position .
-         */
-
         @Override
         public Fragment getItem(int position) {
+            Bundle bundle = new Bundle();
+            bundle.putString(ActivityConstants.CONNECTION_KEY, connection.handle());
+
             switch (position) {
                 case 0:
-                    return new FavoriteFragment();
+                    FavoriteFragment f= new FavoriteFragment();
+                    f.setArguments(bundle);
+                    return f;
                 case 1:
-                    return new RegularFragment();
+                    RegularFragment r = new  RegularFragment();
+                    r.setArguments(bundle);
+                    return r;
 
             }
             return null;

@@ -11,6 +11,11 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.olamatix.R;
+import com.olmatix.internal.Connections;
+import com.olmatix.model.Subscription;
+
+import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * Created by Ratan on 7/29/2015.
@@ -18,6 +23,21 @@ import com.olamatix.R;
 public class FavoriteFragment extends Fragment {
 
     FloatingActionButton fab;
+    ArrayList<Subscription> subscriptions;
+    Connection connection;
+
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Bundle bundle  = this.getArguments();
+        String connectionHandle = bundle.getString(ActivityConstants.CONNECTION_KEY);
+        Map<String, Connection> connections = Connections.getInstance(this.getActivity())
+                .getConnections();
+        connection = connections.get(connectionHandle);
+        subscriptions = connection.getSubscriptions();
+
+    }
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -32,11 +52,16 @@ public class FavoriteFragment extends Fragment {
             public void onClick(View v) {
 
 
+                Bundle bundle = new Bundle();
+                bundle.putString(ActivityConstants.CONNECTION_KEY, connection.handle());
+
                 FragmentManager fragmentManager = getActivity().getSupportFragmentManager();
                 fragmentManager.popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
 
                 FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
-                fragmentTransaction.replace(R.id.containerView, new SubscriptionFragment());
+                SubscriptionFragment fragment = new SubscriptionFragment();
+                fragment.setArguments(bundle);
+                fragmentTransaction.replace(R.id.containerView,fragment);
                 fragmentTransaction.commit();
             }
         });

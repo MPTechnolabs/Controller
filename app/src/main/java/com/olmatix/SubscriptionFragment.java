@@ -47,6 +47,17 @@ public class SubscriptionFragment extends Fragment {
     SubscriptionListItemAdapter adapter;
     Connection connection;
 
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        Bundle bundle  = this.getArguments();
+        String connectionHandle = bundle.getString(ActivityConstants.CONNECTION_KEY);
+        Map<String, Connection> connections = Connections.getInstance(this.getActivity())
+                .getConnections();
+        connection = connections.get(connectionHandle);
+        subscriptions = connection.getSubscriptions();
+
+    }
 
     @Nullable
     @Override
@@ -54,10 +65,6 @@ public class SubscriptionFragment extends Fragment {
 
         View view =  inflater.inflate(R.layout.fragment_subscriptions,null);
 
-
-        Map<String, Connection> connections = Connections.getInstance(getActivity()).getConnections();
-        connection = connections.get("Olmatix");
-        subscriptions = connection.getSubscriptions();
 
         Button subscribeButton = (Button) view.findViewById(R.id.subscribe_button);
 

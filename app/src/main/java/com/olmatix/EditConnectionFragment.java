@@ -1,9 +1,12 @@
 package com.olmatix;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -12,7 +15,10 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Switch;
 import com.olamatix.R;
+import com.olmatix.internal.Connections;
 import com.olmatix.model.ConnectionModel;
+
+import java.util.Map;
 import java.util.Random;
 
 
@@ -30,18 +36,17 @@ public class EditConnectionFragment extends AppCompatActivity {
     private EditText lwtMessage;
     private Spinner lwtQos;
     private Switch lwtRetain;
+    private EditText clientId;
+    private Switch cleanSession;
 
     Toolbar toolbar;
+    boolean newConnection = false;
     private ConnectionModel formModel;
-
-
-    static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-       setContentView(R.layout.fragment_edit_connection);
+       setContentView(R.layout.fragment_edit_connection1);
 
         formModel = new ConnectionModel();
 
@@ -56,9 +61,11 @@ public class EditConnectionFragment extends AppCompatActivity {
             }
         });
 
+        clientId = (EditText) findViewById(R.id.client_id);
         serverHostname = (EditText) findViewById(R.id.hostname);
         serverPort = (EditText) findViewById(R.id.add_connection_port);
         serverPort.setText("");
+        cleanSession = (Switch) findViewById(R.id.clean_session_switch);
         username = (EditText) findViewById(R.id.username);
         password = (EditText) findViewById(R.id.password);
         tlsServerKey = (EditText) findViewById(R.id.tls_server_key);
@@ -69,15 +76,42 @@ public class EditConnectionFragment extends AppCompatActivity {
         lwtMessage = (EditText) findViewById(R.id.lwt_message);
         lwtQos = (Spinner) findViewById(R.id.lwt_qos_spinner);
         lwtRetain = (Switch) findViewById(R.id.retain_switch);
+
         ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getApplicationContext(), R.array.qos_options, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         lwtQos.setAdapter(adapter);
-        populateFromConnectionModel(formModel);
+
+        if(formModel.getClientHandle() != null ){
+
+
+            newConnection = false;
+
+            populateFromConnectionModel(formModel);
+            formModel.setClientHandle(formModel.getClientHandle());
+
+        }
         setFormItemListeners();
 
     }
 
     private void setFormItemListeners(){
+
+        clientId.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                formModel.setClientId(s.toString());
+            }
+        });
 
         serverHostname.addTextChangedListener(new TextWatcher() {
             @Override
@@ -280,10 +314,13 @@ public class EditConnectionFragment extends AppCompatActivity {
     }
 
     private void populateFromConnectionModel(ConnectionModel connectionModel) {
+        clientId.setText(connectionModel.getClientId());
+
         serverHostname.setText(connectionModel.getServerHostName());
         serverPort.setText(Integer.toString(connectionModel.getServerPort()));
         username.setText(connectionModel.getUsername());
         password.setText(connectionModel.getPassword());
+
         tlsServerKey.setText(connectionModel.getTlsServerKey());
         tlsClientKey.setText(connectionModel.getTlsClientKey());
         timeout.setText(Integer.toString(connectionModel.getTimeout()));
@@ -293,5 +330,28 @@ public class EditConnectionFragment extends AppCompatActivity {
         lwtQos.setSelection(connectionModel.getLwtQos());
         lwtRetain.setChecked(connectionModel.isLwtRetain());
     }
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+
+        getMenuInflater().inflate(R.menu.menu_edit_connection, menu);//Menu Resource, Menu
+        return true;
+
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_save_connection:
+
+                MainActivity mainActivity = new MainActivity();
+                mainActivity.updateAndConnect(formModel);
+                finish();
+
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
 
 }

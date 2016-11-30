@@ -3,6 +3,8 @@ package com.olmatix;
 import android.content.Intent;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.widget.DrawerLayout;
@@ -14,17 +16,23 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
+import android.widget.Toast;
+
 import com.olamatix.R;
 import com.olmatix.internal.Connections;
 import com.olmatix.model.ConnectionModel;
 
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity{
 
@@ -37,6 +45,11 @@ public class MainActivity extends AppCompatActivity{
     private ChangeListener changeListener = new ChangeListener();
     private ArrayList<String> connectionMap;
     private ConnectionModel formModel;
+    static int length = 8;
+    static final String AB = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    static Random random = new Random();
+    Button btn_connect;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,18 +58,29 @@ public class MainActivity extends AppCompatActivity{
        /* Map<String, Connection> connections =  Connections.getInstance(getApplicationContext())
                 .getConnections();*/
         formModel = new ConnectionModel();
-        formModel.setClientId("Olmatix");
-        formModel.setClientHandle("Olmatix");
-        formModel.setServerHostName("cloud.olmatix.com");
-        formModel.setServerPort(1883);
-        formModel.setUsername("olmatix");
-        formModel.setPassword("olmatix");
+        if(formModel.getClientHandle() == null && formModel.getServerHostName() == null) {
+            formModel.setClientId("OlmatixApp-08e756ab30");
+            formModel.setServerHostName("cloud.olmatix.com");
+            formModel.setServerPort(1883);
+            formModel.setUsername("olmatix");
+            formModel.setPassword("olmatix");
+            StringBuilder sb = new StringBuilder(length);
+            for (int i = 0; i < length; i++) {
+                sb.append(AB.charAt(random.nextInt(AB.length())));
+            }
+            String clientHandle = sb.toString() + '-' + formModel.getServerHostName() + '-' + formModel.getClientId();
+            formModel.setClientHandle(clientHandle);
+        }
         connectionMap = new ArrayList<String>();
 
-        persistAndConnect(formModel);
 
         findId();
         setEvent();
+        populateConnectionList();
+        persistAndConnect(formModel);
+
+
+
     }
 
     private void findId() {
@@ -64,10 +88,12 @@ public class MainActivity extends AppCompatActivity{
         mNavigationView = (NavigationView) findViewById(R.id.shitstuff) ;
         mFragmentManager = getSupportFragmentManager();
         mFragmentTransaction = mFragmentManager.beginTransaction();
-
-        mFragmentTransaction.replace(R.id.containerView,new TabFragment()).addToBackStack(null).commit();
+        btn_connect = (Button) findViewById(R.id.btn_connect);
+        //mFragmentTransaction.replace(R.id.containerView,new TabFragment()).addToBackStack(null).commit();
 
         toolbar = (android.support.v7.widget.Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
         ActionBarDrawerToggle mDrawerToggle = new ActionBarDrawerToggle(this,mDrawerLayout, toolbar,R.string.app_name,
                 R.string.app_name);
 
@@ -78,6 +104,13 @@ public class MainActivity extends AppCompatActivity{
 
     private void setEvent() {
 
+        btn_connect.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                persistAndConnect(formModel);
+
+            }
+        });
         mNavigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(MenuItem menuItem) {
@@ -86,8 +119,12 @@ public class MainActivity extends AppCompatActivity{
 
 
                 if (menuItem.getItemId() == R.id.nav_home) {
+
+
+/*
                     FragmentTransaction fragmentTransaction = mFragmentManager.beginTransaction();
                     fragmentTransaction.replace(R.id.containerView,new TabFragment()).addToBackStack(null).commit();
+*/
 
                 }
 
@@ -104,7 +141,7 @@ public class MainActivity extends AppCompatActivity{
 
     public void persistAndConnect(ConnectionModel model){
         Log.i("MainActivity", "Persisting new connection:" + model.getClientHandle());
-        Connection connection = Connection.createConnection("Olmatix",model.getClientId(),model.getServerHostName(),model.getServerPort(),this,true);
+        Connection connection = Connection.createConnection(model.getClientHandle(),model.getClientId(),model.getServerHostName(),model.getServerPort(),this,model.isTlsConnection());
         connection.registerChangeListener(changeListener);
         connection.changeConnectionStatus(Connection.ConnectionStatus.CONNECTING);
 
@@ -112,7 +149,7 @@ public class MainActivity extends AppCompatActivity{
         String[] actionArgs = new String[1];
         actionArgs[0] = model.getClientId();
         final ActionListener callback = new ActionListener(this,
-                ActionListener.Action.CONNECT, connection, actionArgs);
+               ActionListener.Action.CONNECT, connection, actionArgs);
         connection.getClient().setCallback(new MqttCallbackHandler(this, model.getClientHandle()));
 
 
@@ -124,28 +161,39 @@ public class MainActivity extends AppCompatActivity{
         connection.addConnectionOptions(connOpts);
         Connections.getInstance(this).addConnection(connection);
         connectionMap.add(model.getClientHandle());
+
         try {
             connection.getClient().connect(connOpts, null, callback);
-        } catch (MqttException e) {
-            e.printStackTrace();
-        }
-        /*try {
-           *//* connection.getClient().connect(connOpts, null, callback);
-            Fragment fragment  = new ConnectionFragment();
+            Fragment fragment  = new TabFragment();
             Bundle bundle = new Bundle();
             bundle.putString(ActivityConstants.CONNECTION_KEY, connection.handle());
             bundle.putBoolean(ActivityConstants.CONNECTED, true);
             fragment.setArguments(bundle);
-            String title = connection.getId();*//*
-            //displayFragment(fragment, title);
+            String title = connection.getId();
+            displayFragment(fragment, title);
 
         }
         catch (MqttException e) {
             Log.e(this.getClass().getCanonicalName(),
                     "MqttException Occured", e);
-        }*/
+        }
 
     }
+
+    private void displayFragment(Fragment fragment, String title){
+        if (fragment != null){
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
+            fragmentTransaction.replace(R.id.containerView, fragment);
+            fragmentTransaction.commit();
+
+            // Set Toolbar Title
+            getSupportActionBar().setTitle("Olmatix");
+
+
+        }
+    }
+
 
     public void updateAndConnect(ConnectionModel model){
         Map<String, Connection> connections = Connections.getInstance(this)
@@ -172,22 +220,23 @@ public class MainActivity extends AppCompatActivity{
             connection.getClient().setTraceCallback(new MqttTraceCallback());
             MqttConnectOptions connOpts = optionsFromModel(model);
             connection.addConnectionOptions(connOpts);
-           // Connections.getInstance(this).updateConnection(connection);
-           // drawerFragment.updateConnection(connection);
+            Connections.getInstance(this).updateConnection(connection);
 
             connection.getClient().connect(connOpts, null, callback);
-           /* Fragment fragment  = new ConnectionFragment();
+           /* Fragment fragment  = new TabFragment();
             Bundle bundle = new Bundle();
             bundle.putString(ActivityConstants.CONNECTION_KEY, connection.handle());
             fragment.setArguments(bundle);
             String title = connection.getId();
-            displayFragment(fragment, title);
-*/
+            displayFragment(fragment, title);*/
+
 
         } catch (MqttException ex){
 
         }
     }
+
+
 
 
     private class ChangeListener implements PropertyChangeListener {
@@ -236,11 +285,22 @@ public class MainActivity extends AppCompatActivity{
         connection.getClient().setCallback(new MqttCallbackHandler(this, connection.handle()));
         try {
             connection.getClient().connect(connection.getConnectionOptions(), null, callback);
+            Toast.makeText(getApplicationContext(),"Connection Established Successfully",Toast.LENGTH_LONG).show();
         }
+
         catch (MqttException e) {
             Log.e(this.getClass().getCanonicalName(),
                     "MqttException Occured", e);
         }
+
+    }
+
+    private void addToHistory(String mainText){
+        System.out.println("LOG: " + mainText);
+        //mAdapter.add(mainText);
+        Snackbar.make(findViewById(android.R.id.content), mainText, Snackbar.LENGTH_LONG)
+                .setAction("Action", null).show();
+
     }
 
     public void disconnect(Connection connection){
@@ -265,10 +325,44 @@ public class MainActivity extends AppCompatActivity{
         switch (item.getItemId()) {
             case R.id.setting:
 
-                startActivity(new Intent(this,ActivitySetting.class));
+                Intent i = new Intent(this,ActivitySetting.class);
+                startActivity(i);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
+
+    private void populateConnectionList(){
+        // Clear drawerFragment
+
+        // get all the available connections
+        Map<String, Connection> connections = Connections.getInstance(this)
+                .getConnections();
+        int connectionIndex = 0;
+        connectionMap = new ArrayList<String>();
+
+        Iterator connectionIterator = connections.entrySet().iterator();
+        while (connectionIterator.hasNext()){
+            Map.Entry pair = (Map.Entry) connectionIterator.next();
+            connectionMap.add((String) pair.getKey());
+            ++connectionIndex;
+        }
+
+    }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Map<String, Connection> connections = Connections.getInstance(this)
+                .getConnections();
+
+        Log.i("MainActivity", "Updating connection: " + connections.keySet().toString());
+        try {
+            Connection connection = connections.get(formModel.getClientHandle());
+            connection.getClient().close();
+        }catch (Exception e)
+        {}
+
+    }
+
 }

@@ -28,7 +28,7 @@ public class ConnectionModel {
 
 
     private String clientHandle = new String();
-    private String clientId = "Olmatix";
+    private String clientId = "OlmatixApp-08e756ab30";
     private String serverHostName = "cloud.olmatix.com";
     private int serverPort = 1883;
     private boolean cleanSession = true;

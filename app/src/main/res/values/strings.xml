@@ -78,4 +78,21 @@
     <string name="on">ON</string>
     <string name="off">OFF</string>
 
+    <string name="nav_item_home">Home</string>
+    <string name="nav_item_friends">Friends</string>
+    <string name="nav_item_notifications">Messages</string>
+    <string name="drawer_open">Open</string>
+    <string name="drawer_close">Close</string>
+
+    <string-array name="nav_drawer_labels">
+        <item>@string/nav_item_home</item>
+        <item>@string/nav_item_friends</item>
+        <item>@string/nav_item_notifications</item>
+    </string-array>
+
+    <string name="manage_title">Manage Connection</string>
+    <string name="manage_delete">Delete Connection</string>
+    <string name="manage_edit">Edit Connection</string>
+    <string name="toast_sub_failed">Failed to subscribe to %1$s</string>
+
 </resources>
